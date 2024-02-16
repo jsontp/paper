@@ -224,3 +224,5 @@ graph TD
 - the `message` key-value pair in the `status` object should be a human-readable error message.
 ### where to submit feature requests
 - feature requests can be submitted to the `jsontp/paper` GitHub repository, or can be emailed directly to the `jsontp` maintainers, the email address of which is provided in the `jsontp` GitHub organization.
+### comments
+- comments should not be included in any message, but a compliant implementation should allow them.
