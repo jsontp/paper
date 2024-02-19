@@ -226,6 +226,9 @@ graph TD
 - used to tell the server that the body will be sent in the next request, and not to time out quickly
 - first, the client sends a message in the format specified above, then the server responds, again set out above. If the server does not support `100-continue`, it must respond with a `501 Not Implemented` status code, at which point the connection will terminate.
 - if the server responds with `100 Continue`, the client then sends its request in the usual fashion, containing all required fields, including headers. The client can modify the headers for this second request if they need to for some reason.
+- #### `ignore-invalid-headers` - `boolean`
+- if the `ignore-invalid-headers` header is set to `true`, the server should ignore any invalid headers, and not respond with a `400 Bad Request` status code.
+- if the `ignore-invalid-headers` header is set to `false`, the server should respond with a `400 Bad Request` status code if any invalid headers are provided.
 ### `response` headers
 #### `date` - `string` in the strftime format (that found given in `man 3 strftime`) `%Y-%m-%dT%H:%M:%SZ%z`
 - the `date` header is used to tell the client the date and time that the response was generated.
@@ -243,9 +246,6 @@ graph TD
 - the `set-cookies` header should be a small `json` object, with the keys being the cookie names, and the values being the cookie values.
 - example: `"set-cookies": {"cookie1": "value1", "cookie2": "value2"}`
 - the server must respond with an `object`, not a `string`, as the `HTTP` specification does not allow for multiple `set-cookie` headers to be sent in a single response, and so `jsontp` must use a `json` object to represent multiple cookies.
-#### `ignore-invalid-headers` - `boolean`
-- if the `ignore-invalid-headers` header is set to `true`, the server should ignore any invalid headers, and not respond with a `400 Bad Request` status code.
-- if the `ignore-invalid-headers` header is set to `false`, the server should respond with a `400 Bad Request` status code if any invalid headers are provided.
 
 ## Other important requirements
 ### `jsontp` versioning
