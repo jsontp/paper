@@ -1,4 +1,4 @@
-# `jsontp` - version `1.0-rc1`
+# `jsontp` - version `1.0-rc2`
 - `json` is the ubiquitous _data interchange format_ for the web
 - `HTTP` is the ubiquitous _protocol_ for the web
 
@@ -88,6 +88,39 @@ graph TD
 
         "encoding": "gzip" // required, but can be `identity` if no encoding is used
     }
+}
+```
+### the `jsontp` 100 Continue request message
+```json
+{
+    "jsontp": "1.0", // required and in the format `major.minor`
+    "type": "request",
+    "resource": "/path/to/resource",
+    "method": "GET",
+
+    "headers": {
+        "expect": "100-continue" // required
+    },
+
+    "body": {} // if not empty, it will be ignored
+}
+```
+### the `jsontp` 100 Continue response message
+```json
+{
+    "jsontp": "1.0", // required and in the format `major.minor(-rcx)` (explained more in the `jsontp` versioning section)
+    "type": "response",
+    "status": {
+        "code": 100, // either 100, or a 4xx or 5xx error code
+        "formal-message": "CONTINUE", // corresponding status code
+        "human-message": "Ackknowledgement on the 100 Continue message"
+    },
+    "resource": "/path/to/resource",
+    "headers": {
+        "date": "2024-01-01T00:00:00Z+00:00", // required and always in this format. Should always be in UTC, but a compliant client should accept any timezone
+        "language": "en-US", // required and always in this format (explained more in the `response` headers section
+    },
+    "body": {} // should be empty, ignored if not
 }
 ```
 ## content requirements of certain key-value pairs
@@ -189,6 +222,10 @@ graph TD
 - if the server cannot provide the resource, it should respond with a `412 Precondition Failed` status code.
 - if the server could provide the resource, but it has been modified since the date provided, it should respond with a `412 Precondition Failed` status code. Unfortunately, the `HTTP` specification does not provide a status code for this (`3xx Modified`), so `jsontp` has to use `412 Precondition Failed` instead, as does the `HTTP` specification.
 - example value: `2024-01-01T00:00:00Z+0000` (no colon is permitted in the timezone offset)
+#### `expect` - `string` (namely `100-continue`)
+- used to tell the server that the body will be sent in the next request, and not to time out quickly
+- first, the client sends a message in the format specified above, then the server responds, again set out above. If the server does not support `100-continue`, it must respond with a `501 Not Implemented` status code, at which point the connection will terminate.
+- if the server responds with `100 Continue`, the client then sends its request in the usual fashion, containing all required fields, including headers. The client can modify the headers for this second request if they need to for some reason.
 ### `response` headers
 #### `date` - `string` in the strftime format (that found given in `man 3 strftime`) `%Y-%m-%dT%H:%M:%SZ%z`
 - the `date` header is used to tell the client the date and time that the response was generated.
@@ -226,3 +263,12 @@ graph TD
 - feature requests can be submitted to the `jsontp/paper` GitHub repository, or can be emailed directly to the `jsontp` maintainers, the email address of which is provided in the `jsontp` GitHub organization.
 ### comments
 - comments should not be included in any message, but a compliant implementation should allow them.
+### The `"expect": "100-continue"` header
+- This is explained in the section on the valid client headers, but below is a nice mermaid diagram
+```mermaid
+sequenceDiagram
+Client ->> Server: body-less request
+Server ->> Client: 100 continue response (or 501, if so the connection ends)
+Client ->> Server: full request
+Server ->> Client: full response
+```
